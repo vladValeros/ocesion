@@ -1,6 +1,8 @@
 <?php
-require '../classes/account.class.php';
-require '../classes/database.class.php';
+require_once '../classes/account.class.php';
+require_once '../classes/database.class.php';
+require_once '../classes/events.class.php';
+require_once '../tools/functions.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -9,9 +11,13 @@ if (session_status() == PHP_SESSION_NONE) {
 // Redirect if the user is not an admin
 Account::redirect_if_not_logged_in('admin');
 
-require '../classes/events.class.php';
-require '../tools/functions.php';
+// Initialize Database instance and get PDO connection
+$database = new Database();
+$pdo = $database->getConnection();
+
+// Now, you can use $pdo to perform any database operations
 ?>
+
 
 
 <!DOCTYPE html>
