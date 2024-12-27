@@ -1,9 +1,11 @@
 <?php
-require_once 'database.class.php';
+
+require_once 'database.class.php'; // Include the Database class
 
 class Events {
     private $pdo;
 
+    // Constructor now uses Database class to obtain PDO connection
     public function __construct($pdo) {
         $this->pdo = $pdo;
     }
@@ -62,7 +64,7 @@ class Events {
             $stmt->bindParam(':event_date', $event_date);
             $stmt->execute();
 
-            $this->logAction($_SESSION['user']['id'], 'add', $id, "Added event: $title");
+            $this->logAction($_SESSION['user']['id'], 'add', $this->pdo->lastInsertId(), "Added event: $title");
     
             return true;
         } catch (PDOException $e) {
@@ -102,7 +104,6 @@ class Events {
             die("Error updating event: " . $e->getMessage());
         }
     }
-    
 
     // Delete an event by ID
     public function deleteEvent($id) {
@@ -140,14 +141,13 @@ class Events {
             die("Error: " . $e->getMessage());
         }
     }
-    
-    
-    
-    
 }
 
-// Initialize the Events class
-global $pdo;
+// Initialize the Database and obtain the PDO connection
+$database = new Database();
+$pdo = $database->getConnection();
+
+// Initialize the Events class with the PDO connection
 $eventsClass = new Events($pdo);
 
 // Initialize variables
@@ -244,8 +244,6 @@ if (isset($_SESSION['user']['role'])) {
         }
     }
 }
-
-
 
 // Fetch all events
 $events = $eventsClass->getAllEvents();
