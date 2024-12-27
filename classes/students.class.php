@@ -1,35 +1,45 @@
 <?php
-require_once 'database.class.php';
+session_start();
+require_once 'database.class.php'; // Include the Database class
 
 class Students {
     private $pdo;
 
+    // Constructor now uses Database class to obtain PDO connection
     public function __construct($pdo) {
         $this->pdo = $pdo;
     }
 
     // Retrieve all students
     public function getAllStudents() {
-        $sql = "SELECT * FROM students ORDER BY last_name ASC, first_name ASC";
-        return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $sql = "SELECT * FROM students ORDER BY last_name ASC, first_name ASC";
+            return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            die("Error fetching students: " . $e->getMessage());
+        }
     }
 
     // Retrieve a student by ID
     public function getStudentById($id) {
-        $sql = "SELECT * FROM students WHERE id = :id";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $sql = "SELECT * FROM students WHERE id = :id";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            die("Error fetching student: " . $e->getMessage());
+        }
     }
-    
+
     // Log student actions
     private function logAction($userId, $action, $studentId, $description) {
         try {
             if (!isset($_SESSION['user']['id'])) {
                 throw new Exception("User session is not set.");
             }
-    
+
             $sql = "INSERT INTO student_logs (user_id, action, student_id, description) 
                     VALUES (:user_id, :action, :student_id, :description)";
             $stmt = $this->pdo->prepare($sql);
@@ -44,39 +54,46 @@ class Students {
             die("Error: " . $e->getMessage());
         }
     }
-    
 
     // Add a new student
     public function addStudent($data) {
-        $sql = "INSERT INTO students 
-                (student_number, last_name, first_name, middle_name, course, year_level, section, 
-                birthdate, sex, address, wmsu_email, personal_email, status) 
-                VALUES 
-                (:student_number, :last_name, :first_name, :middle_name, :course, :year_level, :section, 
-                :birthdate, :sex, :address, :wmsu_email, :personal_email, :status)";
+        try {
+            $sql = "INSERT INTO students 
+                    (student_number, last_name, first_name, middle_name, course, year_level, section, 
+                    birthdate, sex, address, wmsu_email, personal_email, status) 
+                    VALUES 
+                    (:student_number, :last_name, :first_name, :middle_name, :course, :year_level, :section, 
+                    :birthdate, :sex, :address, :wmsu_email, :personal_email, :status)";
 
-        $stmt = $this->pdo->prepare($sql);
-        $this->bindStudentParams($stmt, $data);
-        $stmt->execute();
+            $stmt = $this->pdo->prepare($sql);
+            $this->bindStudentParams($stmt, $data);
+            $stmt->execute();
 
-        $this->logAction($_SESSION['user']['id'], 'add', $this->pdo->lastInsertId(), "Added student: " . $data['first_name'] . ' ' . $data['last_name']);
+            $this->logAction($_SESSION['user']['id'], 'add', $this->pdo->lastInsertId(), "Added student: " . $data['first_name'] . ' ' . $data['last_name']);
+        } catch (PDOException $e) {
+            die("Error adding student: " . $e->getMessage());
+        }
     }
 
     // Update an existing student
     public function updateStudent($id, $data) {
-        $sql = "UPDATE students SET 
-                student_number = :student_number, last_name = :last_name, first_name = :first_name, 
-                middle_name = :middle_name, course = :course, year_level = :year_level, section = :section, 
-                birthdate = :birthdate, sex = :sex, address = :address, wmsu_email = :wmsu_email, 
-                personal_email = :personal_email, status = :status 
-                WHERE id = :id";
+        try {
+            $sql = "UPDATE students SET 
+                    student_number = :student_number, last_name = :last_name, first_name = :first_name, 
+                    middle_name = :middle_name, course = :course, year_level = :year_level, section = :section, 
+                    birthdate = :birthdate, sex = :sex, address = :address, wmsu_email = :wmsu_email, 
+                    personal_email = :personal_email, status = :status 
+                    WHERE id = :id";
 
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->bindParam(':id', $id);
-        $this->bindStudentParams($stmt, $data);
-        $stmt->execute();
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id', $id);
+            $this->bindStudentParams($stmt, $data);
+            $stmt->execute();
 
-         $this->logAction($_SESSION['user']['id'], 'update', $id, "Updated student: " . $data['first_name'] . ' ' . $data['last_name']);
+            $this->logAction($_SESSION['user']['id'], 'update', $id, "Updated student: " . $data['first_name'] . ' ' . $data['last_name']);
+        } catch (PDOException $e) {
+            die("Error updating student: " . $e->getMessage());
+        }
     }
 
     // Delete a student by ID
@@ -87,13 +104,13 @@ class Students {
             if (!$student) {
                 throw new Exception("Student not found.");
             }
-    
+
             // Step 2: Nullify logs associated with the student
             $sql = "UPDATE student_logs SET student_id = NULL WHERE student_id = :id";
             $stmt = $this->pdo->prepare($sql);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
-    
+
             // Step 3: Log the deletion action
             $this->logAction(
                 $_SESSION['user']['id'],        // User ID
@@ -101,13 +118,13 @@ class Students {
                 $id,                            // Student ID
                 "Deleted student: " . $student['first_name'] . ' ' . $student['last_name'] // Description
             );
-    
+
             // Step 4: Delete the student
             $sql = "DELETE FROM students WHERE id = :id";
             $stmt = $this->pdo->prepare($sql);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
-    
+
             return true;
         } catch (PDOException $e) {
             die("Error deleting student: " . $e->getMessage());
@@ -115,7 +132,7 @@ class Students {
             die("Error: " . $e->getMessage());
         }
     }
-    
+
     // Private function to bind parameters
     private function bindStudentParams($stmt, $data) {
         $stmt->bindParam(':student_number', $data['student_number']);
@@ -134,8 +151,11 @@ class Students {
     }
 }
 
-// Initialize the Students class
-global $pdo;
+// Initialize the Database and obtain the PDO connection
+$database = new Database();
+$pdo = $database->getConnection();
+
+// Initialize the Students class with the PDO connection
 $studentsClass = new Students($pdo);
 
 // Initialize variables
@@ -144,33 +164,30 @@ $student_number_err = $name_err = $course_err = $year_level_err = $section_err =
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Validate and assign form fields to variables
     if (empty(trim($_POST['student_number']))) {
         $student_number_err = "Please enter the student number.";
     } else {
         $student_number = trim($_POST['student_number']);
     }
 
-    // Validate Last Name
     if (empty(trim($_POST['last_name']))) {
         $last_name_err = "Please enter the last name.";
     } else {
         $last_name = trim($_POST['last_name']);
     }
 
-    // Validate First Name
     if (empty(trim($_POST['first_name']))) {
         $first_name_err = "Please enter the first name.";
     } else {
         $first_name = trim($_POST['first_name']);
     }
 
-    // Validate Middle Name
     if (empty(trim($_POST['middle_name']))) {
         $middle_name_err = "Please enter the middle name.";
     } else {
         $middle_name = trim($_POST['middle_name']);
     }
-
 
     if (empty(trim($_POST['course']))) {
         $course_err = "Please enter the course.";
