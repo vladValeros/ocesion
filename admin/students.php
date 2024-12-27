@@ -1,14 +1,13 @@
 <?php
-require '../classes/account.class.php';
-require '../classes/database.class.php';
-
-session_start();
+require_once  '../classes/account.class.php';
+require_once '../classes/database.class.php';
+require_once  '../classes/students.class.php';
+require_once  '../tools/functions.php';
 
 // Redirect if the user is not an admin
 Account::redirect_if_not_logged_in('admin');
 
-require '../classes/students.class.php';
-require '../tools/functions.php';
+
 
 ?>
 
@@ -44,6 +43,7 @@ require '../tools/functions.php';
                 <th>Address</th>
                 <th>WMSU Email</th>
                 <th>Personal Email</th>
+                <th>Status</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -60,6 +60,7 @@ require '../tools/functions.php';
                     <td><?= htmlspecialchars($student['address']) ?></td>
                     <td><?= htmlspecialchars($student['wmsu_email']) ?></td>
                     <td><?= htmlspecialchars($student['personal_email']) ?></td>
+                    <td><?= htmlspecialchars($student['status']) ?></td>
                     <td>
                         <button class="btn btn-sm btn-warning edit-btn" 
                                 data-bs-toggle="modal" 
