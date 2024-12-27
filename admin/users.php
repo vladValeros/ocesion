@@ -1,12 +1,11 @@
 <?php
 require '../classes/account.class.php';
-require '../classes/database.class.php';
+require_once '../classes/database.class.php';
 require '../classes/users.class.php';
 require '../tools/functions.php';
-session_start();
-
 // Redirect if the user is not an admin
 Account::redirect_if_not_logged_in('admin');
+
 ?>
 
 <!DOCTYPE html>
@@ -24,16 +23,15 @@ Account::redirect_if_not_logged_in('admin');
     <h1>Manage Users</h1>
 
     <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">
-    Add User
+        Add User
     </button>
-
-   
 
     <h2>User List</h2>
     <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
         <thead>
             <tr>
                 <th>Username</th>
+                <th>Full Name</th>
                 <th>Role</th>
                 <th>Actions</th>
             </tr>
@@ -42,6 +40,7 @@ Account::redirect_if_not_logged_in('admin');
             <?php foreach ($users as $user): ?>
                 <tr>
                     <td><?= htmlspecialchars($user['username']) ?></td>
+                    <td><?= htmlspecialchars($user['full_name']) ?></td>
                     <td><?= htmlspecialchars($user['role']) ?></td>
                     <td>
                         <button class="btn btn-sm btn-warning edit-btn"
@@ -105,7 +104,7 @@ document.getElementById('closeModalBtn').addEventListener('click', function () {
 document.querySelectorAll('.edit-btn').forEach(button => {
   button.addEventListener('click', function () {
     document.getElementById('update_id').value = this.dataset.id;
-    document.getElementById('modal-username').value = this.dataset.username;
+    document.getElementById('modal-student_number').value = this.dataset.username;
     document.getElementById('modal-password').value = this.dataset.password;
     document.getElementById('modal-role').value = this.dataset.role;
   });
