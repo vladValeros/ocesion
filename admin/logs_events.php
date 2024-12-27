@@ -1,5 +1,5 @@
 <?php
-require '../classes/database.class.php';
+require_once  '../classes/database.class.php';
 
 session_start();
 
@@ -9,7 +9,8 @@ if ($_SESSION['user']['role'] !== 'admin') {
     exit();
 }
 
-global $pdo;
+$database = new Database();
+$pdo = $database->getConnection();
 
 $sql = "SELECT event_logs.*, users.username 
         FROM event_logs 
