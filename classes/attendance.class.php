@@ -1,5 +1,5 @@
 <?php
-global $pdo;
+require_once 'database.class.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -8,6 +8,10 @@ if (session_status() == PHP_SESSION_NONE) {
 // Initialize variables
 $event_id = $student_number = $student_name = $time_in = $time_out = $course = "";
 $event_id_err = $student_number_err = $time_in_err = $time_out_err = "";
+
+// Initialize database connection
+$database = new Database();
+$pdo = $database->getConnection();
 
 // Fetch all events for the dropdown
 $events = $pdo->query("SELECT * FROM events ORDER BY event_date ASC")->fetchAll(PDO::FETCH_ASSOC);
@@ -149,3 +153,4 @@ if (isset($_GET['delete_id'])) {
     header("Location: " . getRedirectPath() . "?event_id=" . htmlspecialchars($_GET['event_id']));
     exit();
 }
+?>
