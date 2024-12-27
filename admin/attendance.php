@@ -1,17 +1,26 @@
 <?php
-require '../classes/account.class.php';
-require '../classes/database.class.php';
-require '../classes/attendance.class.php';
-require '../tools/functions.php';
+require_once '../classes/account.class.php';
+require_once '../classes/database.class.php';
+require_once '../classes/attendance.class.php';
+require_once '../tools/functions.php';
+
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
+
 // Redirect if the user is not an admin
 Account::redirect_if_not_logged_in('admin');
+
+// Initialize Database instance and get PDO connection
+$database = new Database();
+$pdo = $database->getConnection();
+
 // Fetch attendance data for the selected event
 $attendance_data = [];
 if (isset($_GET['event_id'])) {
     $event_id = clean_input($_GET['event_id']);
+
+    // Using the PDO object from Database class to prepare and execute the query
     $stmt = $pdo->prepare("
         SELECT 
             a.id, a.student_number, a.time_in, a.time_out, 
@@ -24,9 +33,12 @@ if (isset($_GET['event_id'])) {
     ");
     $stmt->bindParam(':event_id', $event_id);
     $stmt->execute();
+
+    // Fetch the attendance data
     $attendance_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -144,6 +156,7 @@ if (isset($_GET['event_id'])) {
     <p class="mb-0">&copy; 2024 Event Management System. All Rights Reserved.</p>
 </footer>
 <script src="../vendor/jquery/jquery.min.js"></script>
+
 <script>
     document.getElementById('student_number').addEventListener('input', function () {
         const studentNumber = this.value;
