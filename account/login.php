@@ -1,27 +1,26 @@
 <?php
-require '../classes/database.class.php';
-require '../classes/authenticate.class.php';
-require '../tools/functions.php';
+require_once  '../classes/database.class.php';
+require_once  '../classes/authenticate.class.php';
+require_once  '../tools/functions.php';
 
-// Instantiate Authenticator
+
 $auth = new Authenticator($pdo);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = clean_input($_POST['username']);
     $password = clean_input($_POST['password']);
 
-    // Authenticate user
-    if ($auth->login($username, $password)) {
-        // Fetch user role
-        $userRole = $auth->getUserRole($username); // Assuming `getUserRole` is a method that fetches the user's role
 
-        // Redirect based on role
+    if ($auth->login($username, $password)) {
+
+        $userRole = $auth->getUserRole($username);
+
         if ($userRole === 'admin') {
             header("Location: ../admin/dashboard.php");
         } elseif ($userRole === 'officer') {
             header("Location: ../officer/dashboard_officer.php");
         } else {
-            header("Location: ../login.php?error=unauthorized"); // Redirect to login if role is unauthorized
+            header("Location: ../login.php?error=unauthorized"); 
         }
         exit();
     } else {
